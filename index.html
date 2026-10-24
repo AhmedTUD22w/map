@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تخطيط الزيارات الأسبوعية - Ahmed Tarek</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #2563eb;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 18px; }
+        .container { max-width: 1420px; margin: 0 auto; }
+
+        .app-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white;
+            padding: 18px 24px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 20px rgba(30, 58, 138, 0.15);
+        }
+        .app-header h1 { font-size: 1.4rem; font-weight: 800; }
+        .app-header p { font-size: 0.88rem; opacity: 0.9; }
+
+        .trainer-inputs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.14);
+            padding: 10px 14px;
+            border-radius: 10px;
+        }
+        .trainer-inputs .field { display: flex; flex-direction: column; gap: 2px; }
+        .trainer-inputs label { font-size: 0.72rem; color: #dbeafe; font-weight: 700; }
+        .trainer-inputs input {
+            padding: 5px 9px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.84rem;
+        }
+
+        .upload-banner {
+            background: #fffbeb;
+            border: 2px dashed #f59e0b;
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .upload-banner.loaded {
+            background: #ecfdf5;
+            border-color: #10b981;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eff6ff;
+            padding-bottom: 8px;
+        }
+        .badge {
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 0.78rem;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+
+        input[type="date"], input[type="text"], select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            background: #f9fafb;
+        }
+
+        .shops-container {
+            max-height: 420px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f9fafb;
+            padding: 8px;
+        }
+        .shop-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 9px 12px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .shop-item:hover { border-color: var(--primary-light); }
+        .shop-item.selected-today { border-color: var(--success); background: #ecfdf5; }
+        .shop-name { font-weight: 700; font-size: 0.9rem; direction: ltr; text-align: right; }
+        .shop-meta { font-size: 0.75rem; color: var(--muted); display: flex; gap: 8px; margin-top: 2px; }
+        .shop-code-tag { background: #f3f4f6; padding: 1px 6px; border-radius: 4px; font-family: monospace; font-weight: 700; }
+
+        .btn {
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.86rem;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-excel { background: #107c41; color: white; }
+        .btn-excel:hover { background: #0c5e31; }
+        .btn-primary { background: var(--primary-light); color: white; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-danger { background: #fee2e2; color: #b91c1c; }
+
+        .btn-add {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+        .btn-add.added { background: var(--success); }
+
+        /* معاينة مطابقة 100% لألوان الشيت الأصلي */
+        .excel-wrapper {
+            overflow-x: auto;
+            border: 2px solid #9ca3af;
+            border-radius: 6px;
+            background: white;
+            direction: ltr;
+        }
+        table.excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Calibri', sans-serif;
+            font-size: 13px;
+            text-align: center;
+            color: #000000;
+        }
+        table.excel-table th, table.excel-table td {
+            border: 1px solid #000000;
+            padding: 5px 6px;
+            vertical-align: middle;
+        }
+        /* الصف الأول: لبني فاتح #DEEAF6 */
+        .ex-row1 { background-color: #DEEAF6; font-weight: bold; }
+        /* الصف الثاني: رمادي #D8D8D8 */
+        .ex-row2 { background-color: #D8D8D8; font-weight: bold; }
+        /* ألوان الأيام المتبادلة الأصلية: برتقالي/بيج فاتح #FBE5D6 مع أبيض #FFFFFF */
+        .ex-peach { background-color: #FBE5D6; }
+        .ex-white { background-color: #FFFFFF; }
+
+        .editable-cell {
+            background: transparent;
+            border: 1px dashed transparent;
+            width: 100%;
+            text-align: center;
+            font-family: 'Calibri', sans-serif;
+            font-size: 13px;
+            color: #000000;
+        }
+        .editable-cell:focus { border-color: #2563eb; background: #fff; outline: none; }
+        .del-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="app-header">
+        <div>
+            <h1>📅 مشروع تخطيط جدول الزيارات الأسبوعي (Weekly Schedule Plan)</h1>
+            <p>اختر التاريخ والمحلات يومياً وقم بتحميل شيت الإكسيل بنفس الألوان والتنسيق الأصلي 100%</p>
+        </div>
+        <div class="trainer-inputs">
+            <div class="field">
+                <label>Trainer Code</label>
+                <input type="text" id="trainerCode" value="A-3180" oninput="renderTable()">
+            </div>
+            <div class="field">
+                <label>Trainer Name</label>
+                <input type="text" id="trainerName" value="Ahmed Tarek Elsayed Abo Sreaa" style="width: 220px;" oninput="renderTable()">
+            </div>
+            <div class="field">
+                <label>اسم التاب (Sheet)</label>
+                <input type="text" id="sheetName" value="W41" style="width: 70px;">
+            </div>
+            <div class="field">
+                <label>اسم الملف عند الحفظ</label>
+                <input type="text" id="fileName" value="Weekly schedule plan A.Tarek-2026-W41" style="width: 230px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- شريط رفع ملف المحلات -->
+    <div class="upload-banner" id="uploadBanner">
+        <div>
+            <strong id="bannerTitle">📂 الخطوة الأولى: ارفع ملف المحلات (SHOPS.xlsx) من جهازك</strong>
+            <p style="font-size: 0.82rem; color: #4b5563; margin-top: 2px;" id="bannerSub">
+                بمجرد اختيار ملف SHOPS.xlsx سيتم حفظ الـ 2,581 محل داخل متصفحك تلقائياً ولن تحتاج لرفعه مرة أخرى!
+            </p>
+        </div>
+        <div>
+            <input type="file" id="shopsFileInput" accept=".xlsx,.xls" style="display:none;" onchange="handleShopsUpload(event)">
+            <button class="btn btn-primary" onclick="document.getElementById('shopsFileInput').click()">
+                📂 اختر ملف SHOPS.xlsx
+            </button>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- اللوحة اليمنى: اختيار التاريخ والمحلات -->
+        <div class="card">
+            <div class="card-title">
+                <span>1️⃣ اختر التاريخ والمحلات</span>
+                <span class="badge" id="shopsCountBadge">0 محل</span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="margin:0;">
+                    <label>📅 تاريخ الزيارة (Date):</label>
+                    <input type="date" id="visitDate" value="2026-10-24" onchange="filterShops()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label>💬 تعليق افتراضي (Comment):</label>
+                    <input type="text" id="defaultComment" placeholder="اختياري...">
+                </div>
+            </div>
+
+            <div style="background:#eff6ff; padding:8px 10px; border-radius:8px; margin:10px 0; font-size:0.8rem; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="smartRegionFix" checked style="width:15px; height:15px;">
+                <label for="smartRegionFix" style="cursor:pointer;">ضبط تلقائي للقليوبية لتظهر (Area: Delta / Governorate: Qalubia) مثل شيتك</label>
+            </div>
+
+            <div class="form-group">
+                <label>🔍 بحث سريع (باسم المحل أو الكود أو المركز):</label>
+                <input type="text" id="searchInput" placeholder="ابحث هنا مثل: Raneen أو B.Tech أو Banha..." oninput="filterShops()">
+            </div>
+
+            <div class="form-row-3">
+                <div>
+                    <label style="font-size:0.75rem; font-weight:700;">المنطقة (Area)</label>
+                    <select id="filterArea" onchange="onAreaChange()"><option value="">الكل</option></select>
+                </div>
+                <div>
+                    <label style="font-size:0.75rem; font-weight:700;">المحافظة (Gov)</label>
+                    <select id="filterGov" onchange="onGovChange()"><option value="">الكل</option></select>
+                </div>
+                <div>
+                    <label style="font-size:0.75rem; font-weight:700;">المركز (District)</label>
+                    <select id="filterDist" onchange="filterShops()"><option value="">الكل</option></select>
+                </div>
+            </div>
+
+            <div class="shops-container" id="shopsListContainer"></div>
+        </div>
+
+        <!-- اللوحة اليسرى: معاينة الشيت والتصدير -->
+        <div class="card">
+            <div class="card-title">
+                <span>2️⃣ معاينة الشيت المباشرة (نفس الألوان الأصلية 100%)</span>
+                <span class="badge" id="totalPlannedBadge">0 زيارة</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn btn-excel" onclick="exportToExcel(false)">
+                        📥 تحميل شيت جدول الزيارات (نفس الشيت الأصلي)
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportToExcel(true)">
+                        📑 تحميل الشيت + مرفق تاب بكل المحلات (SHOPS)
+                    </button>
+                </div>
+                <button class="btn btn-danger" onclick="clearSchedule()">🗑️ مسح الجدول لبدء أسبوع جديد</button>
+            </div>
+
+            <div class="excel-wrapper">
+                <table class="excel-table" id="schedulePreviewTable"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let ALL_SHOPS = [
+    {c:"S-9158-034", n:"Raneen (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", ch:"", ad:"1 Galaa Street"},
+    {c:"S-12206-002", n:"BS-IR-Tanta", a:"Delta", g:"Gharbia", d:"Tanta", ch:"Dealer", ad:"1 El Geish St"},
+    {c:"S-7092-007", n:"Ehab Center (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", ch:"", ad:"5 El Roba Mall"},
+    {c:"S-4625-043", n:"Carrefour (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", ch:"Hyper", ad:"Tanta El Mahla Road"},
+    {c:"S-5550-001", n:"Smart sense", a:"Cairo", g:"Cairo", d:"Maadi", ch:"", ad:"18 W Magdy Salama ST"},
+    {c:"S-12890-001", n:"El Zaeem (Toukh)", a:"Cairo", g:"Qalyubia", d:"Toukh", ch:"Dealer", ad:"2 St Hamam El Sbaha"},
+    {c:"S-11287-001", n:"El Shaboury", a:"Cairo", g:"Qalyubia", d:"Toukh", ch:"Dealer", ad:"2 El Shahed Ahmed Abd El Aziz"},
+    {c:"S-14371-001", n:"Fathet Khair", a:"Cairo", g:"Qalyubia", d:"Toukh", ch:"Dealer", ad:"St City Council Toukh"},
+    {c:"S-14314-001", n:"Amer", a:"Cairo", g:"Qalyubia", d:"Toukh", ch:"Dealer", ad:"Baltan - Toukh"},
+    {c:"S-14374-001", n:"El Shrook", a:"Cairo", g:"Qalyubia", d:"Banha", ch:"Dealer", ad:"Sandanhor - Banha"},
+    {c:"S-0589-002", n:"Mall El Abed Shop", a:"Cairo", g:"Qalyubia", d:"Banha", ch:"", ad:"El Abed Mall"},
+    {c:"S-7631-001", n:"El Beet El Saeed (Banha)", a:"Cairo", g:"Qalyubia", d:"Banha", ch:"", ad:"Banha"},
+    {c:"S-7557-001", n:"El Ahram Mall", a:"Cairo", g:"Qalyubia", d:"Banha", ch:"", ad:"Banha"},
+    {c:"S-7005-196", n:"B.Tech (Qalyub)", a:"Cairo", g:"Qalyubia", d:"Qalyub", ch:"Chain", ad:"Qalyub"},
+    {c:"S-9158-021", n:"Raneen (Qalyub)", a:"Cairo", g:"Qalyubia", d:"Qalyub", ch:"", ad:"Qalyub"},
+    {c:"S-7005-082", n:"B.Tech (Kanater)", a:"Cairo", g:"Qalyubia", d:"El Kanater", ch:"Chain", ad:"El Kanater"},
+    {c:"S-9158-040", n:"Raneen (Kanater)", a:"Cairo", g:"Qalyubia", d:"El Kanater", ch:"", ad:"El Kanater"},
+    {c:"S-7005-044", n:"B.Tech (Shebin El Koum)", a:"Delta", g:"Menufia", d:"Sheben", ch:"Chain", ad:"Shebin El Koum"},
+    {c:"S-7595-002", n:"BS-IR-Sheben New-Gold", a:"Delta", g:"Menufia", d:"Sheben", ch:"", ad:"3 Hathot St"},
+    {c:"S-7505-001", n:"El Khawaga (El Monfiya)", a:"Delta", g:"Menufia", d:"Sheben", ch:"", ad:"El Kolyat St"},
+    {c:"S-7568-001", n:"Abod El Ashmawy", a:"Delta", g:"Menufia", d:"Minuf", ch:"", ad:"48 Anwar Sadat St"}
+];
+
+let scheduleData = [
+    {date:"2026-10-03", c:"S-9158-034", n:"Raneen (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", comment:""},
+    {date:"2026-10-03", c:"S-12206-002", n:"BS-IR-Tanta", a:"Delta", g:"Gharbia", d:"Tanta", comment:""},
+    {date:"2026-10-03", c:"S-7092-007", n:"Ehab Center (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", comment:""},
+    {date:"2026-10-03", c:"S-4625-043", n:"Carrefour (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", comment:""},
+    {date:"2026-10-04", c:"S-5550-001", n:"Smart sense", a:"Cairo", g:"Cairo", d:"Maadi", comment:""},
+    {date:"2026-10-05", c:"S-12890-001", n:"El Zaeem (Toukh)", a:"Delta", g:"Qalubia", d:"Toukh", comment:""},
+    {date:"2026-10-05", c:"S-11287-001", n:"El Shaboury", a:"Delta", g:"Qalubia", d:"Toukh", comment:""},
+    {date:"2026-10-05", c:"S-14371-001", n:"Fathet Khair", a:"Delta", g:"Qalubia", d:"Toukh", comment:""},
+    {date:"2026-10-05", c:"S-14314-001", n:"Amer", a:"Delta", g:"Qalubia", d:"Toukh", comment:""},
+    {date:"2026-10-06", c:"S-14374-001", n:"El Shrook", a:"Delta", g:"Qalubia", d:"Banha", comment:""},
+    {date:"2026-10-06", c:"S-0589-002", n:"Mall El Abed Shop", a:"Delta", g:"Qalubia", d:"Banha", comment:""},
+    {date:"2026-10-06", c:"S-7631-001", n:"El Beet El Saeed (Banha)", a:"Delta", g:"Qalubia", d:"Banha", comment:""},
+    {date:"2026-10-06", c:"S-7557-001", n:"El Ahram Mall", a:"Delta", g:"Qalubia", d:"Banha", comment:""},
+    {date:"2026-10-07", c:"S-7005-196", n:"B.Tech (Qalyub)", a:"Delta", g:"Qalubia", d:"Qalyub", comment:""},
+    {date:"2026-10-07", c:"S-9158-021", n:"Raneen (Qalyub)", a:"Delta", g:"Qalubia", d:"Qalyub", comment:""},
+    {date:"2026-10-07", c:"S-7005-082", n:"B.Tech (Kanater)", a:"Delta", g:"Qalubia", d:"El Kanater", comment:""},
+    {date:"2026-10-07", c:"S-9158-040", n:"Raneen (Kanater)", a:"Delta", g:"Qalubia", d:"El Kanater", comment:""},
+    {date:"2026-10-08", c:"S-7005-044", n:"B.Tech (Shebin El Koum)", a:"Delta", g:"Menufia", d:"Shbeen Elkooom", comment:""},
+    {date:"2026-10-08", c:"S-7595-002", n:"BS-IR-Sheben New-Gold", a:"Delta", g:"Menufia", d:"Shbeen Elkooom", comment:""},
+    {date:"2026-10-08", c:"S-7505-001", n:"El Khawaga (El Monfiya)", a:"Delta", g:"Menufia", d:"Shbeen Elkooom", comment:""},
+    {date:"2026-10-08", c:"S-7568-001", n:"Abod El Ashmawy", a:"Delta", g:"Menufia", d:"Shbeen Elkooom", comment:""}
+];
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function handleShopsUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type: 'array'});
+        const firstSheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, {defval: ''});
+        
+        const parsed = rows.map(r => ({
+            c: String(r['Shop Code'] || '').trim(),
+            n: String(r['Shop Name'] || '').trim(),
+            a: String(r['Area'] || '').trim(),
+            g: String(r['Governorate'] || '').trim(),
+            d: String(r['District'] || '').trim(),
+            ch: String(r['channel_name'] || '').trim(),
+            ad: String(r['Address'] || '').trim()
+        })).filter(s => s.c || s.n);
+
+        if (parsed.length > 0) {
+            ALL_SHOPS = parsed;
+            try { localStorage.setItem('SAVED_SHOPS_DB', JSON.stringify(ALL_SHOPS)); } catch(err) {}
+            updateBannerStatus(true);
+            initFilters();
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function updateBannerStatus(isLoaded) {
+    const banner = document.getElementById('uploadBanner');
+    if (isLoaded) {
+        banner.classList.add('loaded');
+        document.getElementById('bannerTitle').textContent = `✅ تم تحميل وحفظ قائمة المحلات الكاملة بنجاح (${ALL_SHOPS.length} محل متاح الآن)`;
+        document.getElementById('bannerSub').textContent = 'البيانات محفوظة في متصفحك تلقائياً. يمكنك تحديثها في أي وقت برفع ملف جديد.';
+    }
+}
+
+function getDayName(dateStr) {
+    if (!dateStr) return '';
+    const p = dateStr.split('-');
+    return DAY_NAMES[new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])).getDay()];
+}
+
+function formatExcelDateDisplay(dateStr) {
+    if (!dateStr) return '';
+    const p = dateStr.split('-');
+    return `${p[1]}-${p[2]}-${p[0].slice(2)}`;
+}
+
+function initFilters() {
+    const areaSel = document.getElementById('filterArea');
+    areaSel.innerHTML = '<option value="">الكل</option>';
+    [...new Set(ALL_SHOPS.map(s => s.a).filter(Boolean))].sort().forEach(a => {
+        areaSel.innerHTML += `<option value="${a}">${a}</option>`;
+    });
+    populateGovs();
+    populateDists();
+    filterShops();
+}
+
+function populateGovs() {
+    const areaVal = document.getElementById('filterArea').value;
+    const govSel = document.getElementById('filterGov');
+    govSel.innerHTML = '<option value="">الكل</option>';
+    [...new Set(ALL_SHOPS.filter(s => !areaVal || s.a === areaVal).map(s => s.g).filter(Boolean))].sort().forEach(g => {
+        govSel.innerHTML += `<option value="${g}">${g}</option>`;
+    });
+}
+
+function populateDists() {
+    const areaVal = document.getElementById('filterArea').value;
+    const govVal = document.getElementById('filterGov').value;
+    const distSel = document.getElementById('filterDist');
+    distSel.innerHTML = '<option value="">الكل</option>';
+    [...new Set(ALL_SHOPS.filter(s => (!areaVal || s.a === areaVal) && (!govVal || s.g === govVal)).map(s => s.d).filter(Boolean))].sort().forEach(d => {
+        distSel.innerHTML += `<option value="${d}">${d}</option>`;
+    });
+}
+
+function onAreaChange() { populateGovs(); populateDists(); filterShops(); }
+function onGovChange() { populateDists(); filterShops(); }
+
+function filterShops() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const areaVal = document.getElementById('filterArea').value;
+    const govVal = document.getElementById('filterGov').value;
+    const distVal = document.getElementById('filterDist').value;
+    const selectedDate = document.getElementById('visitDate').value;
+
+    const filtered = ALL_SHOPS.filter(s => {
+        if (areaVal && s.a !== areaVal) return false;
+        if (govVal && s.g !== govVal) return false;
+        if (distVal && s.d !== distVal) return false;
+        if (q) return s.n.toLowerCase().includes(q) || s.c.toLowerCase().includes(q) || s.d.toLowerCase().includes(q);
+        return true;
+    });
+
+    document.getElementById('shopsCountBadge').textContent = `${filtered.length} محل متاح`;
+    const container = document.getElementById('shopsListContainer');
+    container.innerHTML = '';
+
+    filtered.slice(0, 100).forEach(shop => {
+        const isAdded = scheduleData.some(i => i.date === selectedDate && i.c === shop.c);
+        const div = document.createElement('div');
+        div.className = 'shop-item' + (isAdded ? ' selected-today' : '');
+        div.onclick = () => toggleShopForDate(shop);
+        div.innerHTML = `
+            <div>
+                <div class="shop-name">${shop.n}</div>
+                <div class="shop-meta">
+                    <span class="shop-code-tag">${shop.c}</span>
+                    <span>📍 ${shop.g} - ${shop.d}</span>
+                </div>
+            </div>
+            <button class="btn-add ${isAdded ? 'added' : ''}">${isAdded ? '✓ مضاف' : '+ أضف لليوم'}</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function toggleShopForDate(shop) {
+    const selectedDate = document.getElementById('visitDate').value;
+    const idx = scheduleData.findIndex(i => i.date === selectedDate && i.c === shop.c);
+    if (idx !== -1) {
+        scheduleData.splice(idx, 1);
+    } else {
+        let area = shop.a, gov = shop.g;
+        if (document.getElementById('smartRegionFix').checked && gov.toLowerCase() === 'qalyubia') {
+            area = 'Delta'; gov = 'Qalubia';
+        }
+        scheduleData.push({
+            date: selectedDate, c: shop.c, n: shop.n, a: area, g: gov, d: shop.d,
+            comment: document.getElementById('defaultComment').value.trim()
+        });
+    }
+    scheduleData.sort((a, b) => a.date.localeCompare(b.date));
+    renderTable();
+    filterShops();
+}
+
+function getGroupedInfo() {
+    const groups = [];
+    let curr = null;
+    scheduleData.forEach((item, index) => {
+        if (!curr || curr.date !== item.date) {
+            curr = { date: item.date, items: [] };
+            groups.push(curr);
+        }
+        curr.items.push({ ...item, globalIndex: index });
+    });
+    return groups;
+}
+
+function updateCell(idx, field, val) { scheduleData[idx][field] = val; }
+function removeRow(idx) { scheduleData.splice(idx, 1); renderTable(); filterShops(); }
+function clearSchedule() { scheduleData = []; renderTable(); filterShops(); }
+
+function renderTable() {
+    const tbl = document.getElementById('schedulePreviewTable');
+    const tCode = document.getElementById('trainerCode').value;
+    const tName = document.getElementById('trainerName').value;
+    document.getElementById('totalPlannedBadge').textContent = `${scheduleData.length} زيارة`;
+
+    let html = `
+        <thead>
+            <tr>
+                <td class="ex-row1">Trainer Code :</td>
+                <td class="ex-row1" colspan="3">${tCode}</td>
+                <td class="ex-row1">Trainer Name :</td>
+                <td class="ex-row1" colspan="3">${tName}</td>
+                <td style="border:none; background:#f3f4f6;"></td>
+            </tr>
+            <tr>
+                <th class="ex-row2">DATE </th>
+                <th class="ex-row2">Day</th>
+                <th class="ex-row2">Shop Code</th>
+                <th class="ex-row2">Shop Name</th>
+                <th class="ex-row2">Area</th>
+                <th class="ex-row2">Governorate</th>
+                <th class="ex-row2">District</th>
+                <th class="ex-row2">Comment </th>
+                <th style="border:none; background:#f3f4f6;"></th>
+            </tr>
+        </thead><tbody>`;
+
+    const groups = getGroupedInfo();
+    groups.forEach((grp, gIdx) => {
+        // التبادل بين اللون البيج/البرتقالي الفاتح الأصلي (#FBE5D6) والأبيض (#FFFFFF)
+        const cls = (gIdx % 2 === 0) ? 'ex-peach' : 'ex-white';
+        const dayName = getDayName(grp.date);
+        grp.items.forEach((item, itemIdx) => {
+            const i = item.globalIndex;
+            html += `<tr class="${cls}">
+                <td>${formatExcelDateDisplay(item.date)}</td>
+                ${itemIdx === 0 ? `<td rowspan="${grp.items.length}" class="${cls}">${dayName}</td>` : ''}
+                <td><input class="editable-cell" value="${item.c}" onchange="updateCell(${i},'c',this.value)"></td>
+                <td><input class="editable-cell" value="${item.n}" onchange="updateCell(${i},'n',this.value)"></td>
+                <td><input class="editable-cell" value="${item.a}" onchange="updateCell(${i},'a',this.value)"></td>
+                <td><input class="editable-cell" value="${item.g}" onchange="updateCell(${i},'g',this.value)"></td>
+                <td><input class="editable-cell" value="${item.d}" onchange="updateCell(${i},'d',this.value)"></td>
+                <td><input class="editable-cell" value="${item.comment||''}" onchange="updateCell(${i},'comment',this.value)"></td>
+                <td style="border:none; background:#f3f4f6;"><button class="del-btn" onclick="removeRow(${i})">✖</button></td>
+            </tr>`;
+        });
+    });
+    tbl.innerHTML = html + `</tbody>`;
+}
+
+async function exportToExcel(includeShopsSheet) {
+    if (scheduleData.length === 0) return alert('أضف محلاً واحداً على الأقل!');
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet(document.getElementById('sheetName').value.trim() || 'W41');
+
+    // نفس عرض الأعمدة بالمللي من شيتك الأصلي
+    ws.columns = [
+        { width: 11.57 }, { width: 5.14 }, { width: 12.00 }, { width: 36.57 },
+        { width: 12.29 }, { width: 15.57 }, { width: 13.00 }, { width: 16.71 }
+    ];
+
+    const fullBorder = {
+        top: {style:'thin', color:{argb:'FF000000'}},
+        left: {style:'thin', color:{argb:'FF000000'}},
+        bottom: {style:'thin', color:{argb:'FF000000'}},
+        right: {style:'thin', color:{argb:'FF000000'}}
+    };
+
+    // الصف الأول: بيانات المدرب (#DEEAF6)
+    const r1 = ws.getRow(1);
+    r1.getCell(1).value = 'Trainer Code :';
+    r1.getCell(2).value = document.getElementById('trainerCode').value;
+    r1.getCell(5).value = 'Trainer Name :';
+    r1.getCell(6).value = document.getElementById('trainerName').value;
+    ws.mergeCells('B1:D1');
+    ws.mergeCells('F1:H1');
+    for (let c = 1; c <= 8; c++) {
+        const cell = r1.getCell(c);
+        cell.font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF000000' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDEEAF6' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = fullBorder;
+    }
+
+    // الصف الثاني: العناوين (#D8D8D8)
+    const headers = ['DATE ', 'Day', 'Shop Code', 'Shop Name', 'Area', 'Governorate', 'District', 'Comment '];
+    const r2 = ws.getRow(2);
+    headers.forEach((h, idx) => {
+        const cell = r2.getCell(idx + 1);
+        cell.value = h;
+        cell.font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF000000' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD8D8D8' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = fullBorder;
+    });
+
+    // صفوف البيانات: يوم باللون البيج/البرتقالي الفاتح الأصلي (FFFBE5D6 / Theme 5 Tint 0.8) ويوم أبيض (FFFFFFFF)
+    const groups = getGroupedInfo();
+    let rowIdx = 3;
+    groups.forEach((grp, gIdx) => {
+        const isColoredDay = (gIdx % 2 === 0);
+        const fill = isColoredDay
+            ? { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFBE5D6' } }
+            : { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+
+        const startRow = rowIdx;
+        const p = grp.date.split('-');
+        const jsDate = new Date(Date.UTC(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])));
+
+        grp.items.forEach((item, iIdx) => {
+            const r = ws.getRow(rowIdx);
+            r.getCell(1).value = jsDate;
+            r.getCell(1).numFmt = 'mm-dd-yy';
+            if (iIdx === 0) r.getCell(2).value = getDayName(grp.date);
+            r.getCell(3).value = item.c;
+            r.getCell(4).value = item.n;
+            r.getCell(5).value = item.a;
+            r.getCell(6).value = item.g;
+            r.getCell(7).value = item.d;
+            r.getCell(8).value = item.comment || null;
+
+            for (let c = 1; c <= 8; c++) {
+                const cell = r.getCell(c);
+                cell.font = { name: 'Calibri', size: 9, bold: false, color: { argb: 'FF000000' } };
+                cell.fill = fill;
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                cell.border = fullBorder;
+            }
+            rowIdx++;
+        });
+        if (rowIdx - 1 > startRow) {
+            ws.mergeCells(`B${startRow}:B${rowIdx - 1}`);
+        }
+    });
+
+    if (includeShopsSheet) {
+        const wsShops = workbook.addWorksheet('SHOPS_LIST');
+        wsShops.columns = [
+            { header: 'Shop Code', key: 'c', width: 15 },
+            { header: 'Shop Name', key: 'n', width: 38 },
+            { header: 'Area', key: 'a', width: 12 },
+            { header: 'Governorate', key: 'g', width: 16 },
+            { header: 'District', key: 'd', width: 18 },
+            { header: 'Channel', key: 'ch', width: 15 },
+            { header: 'Address', key: 'ad', width: 45 }
+        ];
+        ALL_SHOPS.forEach(s => wsShops.addRow(s));
+        wsShops.autoFilter = 'A1:G1';
+    }
+
+    const buf = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buf]), (document.getElementById('fileName').value.trim() || 'Schedule') + '.xlsx');
+}
+
+window.onload = () => {
+    const saved = localStorage.getItem('SAVED_SHOPS_DB');
+    if (saved) {
+        try { ALL_SHOPS = JSON.parse(saved); updateBannerStatus(true); } catch(e) {}
+    }
+    initFilters();
+    renderTable();
+};
+</script>
+</body>
+</html>
