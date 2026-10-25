@@ -305,7 +305,7 @@
             <div class="form-row">
                 <div class="form-group" style="margin:0;">
                     <label>📅 تاريخ الزيارة (Date):</label>
-                    <input type="date" id="visitDate" value="2026-10-24" onchange="filterShops()">
+                    <input type="date" id="visitDate" value="2026-10-25" onchange="filterShops()">
                 </div>
                 <div class="form-group" style="margin:0;">
                     <label>💬 تعليق افتراضي (Comment):</label>
@@ -313,12 +313,7 @@
                 </div>
             </div>
 
-            <div style="background:#eff6ff; padding:8px 10px; border-radius:8px; margin:10px 0; font-size:0.8rem; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:8px;">
-                <input type="checkbox" id="smartRegionFix" checked style="width:15px; height:15px; flex-shrink:0;">
-                <label for="smartRegionFix" style="cursor:pointer;">ضبط تلقائي للقليوبية لتظهر (Area: Delta / Governorate: Qalubia) مثل شيتك</label>
-            </div>
-
-            <div class="form-group">
+            <div class="form-group" style="margin-top: 10px;">
                 <label>🔍 بحث سريع (باسم المحل أو الكود أو المركز):</label>
                 <input type="text" id="searchInput" placeholder="ابحث هنا مثل: Raneen أو B.Tech أو Banha..." oninput="filterShops()">
             </div>
@@ -368,53 +363,10 @@
 </div>
 
 <script>
-let ALL_SHOPS = [
-    {c:"S-9158-034", n:"Raneen (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", ch:"", ad:"1 Galaa Street"},
-    {c:"S-12206-002", n:"BS-IR-Tanta", a:"Delta", g:"Gharbia", d:"Tanta", ch:"Dealer", ad:"1 El Geish St"},
-    {c:"S-7092-007", n:"Ehab Center (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", ch:"", ad:"5 El Roba Mall"},
-    {c:"S-4625-043", n:"Carrefour (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", ch:"Hyper", ad:"Tanta El Mahla Road"},
-    {c:"S-5550-001", n:"Smart sense", a:"Cairo", g:"Cairo", d:"Maadi", ch:"", ad:"18 W Magdy Salama ST"},
-    {c:"S-12890-001", n:"El Zaeem (Toukh)", a:"Cairo", g:"Qalyubia", d:"Toukh", ch:"Dealer", ad:"2 St Hamam El Sbaha"},
-    {c:"S-11287-001", n:"El Shaboury", a:"Cairo", g:"Qalyubia", d:"Toukh", ch:"Dealer", ad:"2 El Shahed Ahmed Abd El Aziz"},
-    {c:"S-14371-001", n:"Fathet Khair", a:"Cairo", g:"Qalyubia", d:"Toukh", ch:"Dealer", ad:"St City Council Toukh"},
-    {c:"S-14314-001", n:"Amer", a:"Cairo", g:"Qalyubia", d:"Toukh", ch:"Dealer", ad:"Baltan - Toukh"},
-    {c:"S-14374-001", n:"El Shrook", a:"Cairo", g:"Qalyubia", d:"Banha", ch:"Dealer", ad:"Sandanhor - Banha"},
-    {c:"S-0589-002", n:"Mall El Abed Shop", a:"Cairo", g:"Qalyubia", d:"Banha", ch:"", ad:"El Abed Mall"},
-    {c:"S-7631-001", n:"El Beet El Saeed (Banha)", a:"Cairo", g:"Qalyubia", d:"Banha", ch:"", ad:"Banha"},
-    {c:"S-7557-001", n:"El Ahram Mall", a:"Cairo", g:"Qalyubia", d:"Banha", ch:"", ad:"Banha"},
-    {c:"S-7005-196", n:"B.Tech (Qalyub)", a:"Cairo", g:"Qalyubia", d:"Qalyub", ch:"Chain", ad:"Qalyub"},
-    {c:"S-9158-021", n:"Raneen (Qalyub)", a:"Cairo", g:"Qalyubia", d:"Qalyub", ch:"", ad:"Qalyub"},
-    {c:"S-7005-082", n:"B.Tech (Kanater)", a:"Cairo", g:"Qalyubia", d:"El Kanater", ch:"Chain", ad:"El Kanater"},
-    {c:"S-9158-040", n:"Raneen (Kanater)", a:"Cairo", g:"Qalyubia", d:"El Kanater", ch:"", ad:"El Kanater"},
-    {c:"S-7005-044", n:"B.Tech (Shebin El Koum)", a:"Delta", g:"Menufia", d:"Sheben", ch:"Chain", ad:"Shebin El Koum"},
-    {c:"S-7595-002", n:"BS-IR-Sheben New-Gold", a:"Delta", g:"Menufia", d:"Sheben", ch:"", ad:"3 Hathot St"},
-    {c:"S-7505-001", n:"El Khawaga (El Monfiya)", a:"Delta", g:"Menufia", d:"Sheben", ch:"", ad:"El Kolyat St"},
-    {c:"S-7568-001", n:"Abod El Ashmawy", a:"Delta", g:"Menufia", d:"Minuf", ch:"", ad:"48 Anwar Sadat St"}
-];
+let ALL_SHOPS = [];
 
-let scheduleData = [
-    {date:"2026-10-03", c:"S-9158-034", n:"Raneen (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", comment:""},
-    {date:"2026-10-03", c:"S-12206-002", n:"BS-IR-Tanta", a:"Delta", g:"Gharbia", d:"Tanta", comment:""},
-    {date:"2026-10-03", c:"S-7092-007", n:"Ehab Center (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", comment:""},
-    {date:"2026-10-03", c:"S-4625-043", n:"Carrefour (Tanta)", a:"Delta", g:"Gharbia", d:"Tanta", comment:""},
-    {date:"2026-10-04", c:"S-5550-001", n:"Smart sense", a:"Cairo", g:"Cairo", d:"Maadi", comment:""},
-    {date:"2026-10-05", c:"S-12890-001", n:"El Zaeem (Toukh)", a:"Delta", g:"Qalubia", d:"Toukh", comment:""},
-    {date:"2026-10-05", c:"S-11287-001", n:"El Shaboury", a:"Delta", g:"Qalubia", d:"Toukh", comment:""},
-    {date:"2026-10-05", c:"S-14371-001", n:"Fathet Khair", a:"Delta", g:"Qalubia", d:"Toukh", comment:""},
-    {date:"2026-10-05", c:"S-14314-001", n:"Amer", a:"Delta", g:"Qalubia", d:"Toukh", comment:""},
-    {date:"2026-10-06", c:"S-14374-001", n:"El Shrook", a:"Delta", g:"Qalubia", d:"Banha", comment:""},
-    {date:"2026-10-06", c:"S-0589-002", n:"Mall El Abed Shop", a:"Delta", g:"Qalubia", d:"Banha", comment:""},
-    {date:"2026-10-06", c:"S-7631-001", n:"El Beet El Saeed (Banha)", a:"Delta", g:"Qalubia", d:"Banha", comment:""},
-    {date:"2026-10-06", c:"S-7557-001", n:"El Ahram Mall", a:"Delta", g:"Qalubia", d:"Banha", comment:""},
-    {date:"2026-10-07", c:"S-7005-196", n:"B.Tech (Qalyub)", a:"Delta", g:"Qalubia", d:"Qalyub", comment:""},
-    {date:"2026-10-07", c:"S-9158-021", n:"Raneen (Qalyub)", a:"Delta", g:"Qalubia", d:"Qalyub", comment:""},
-    {date:"2026-10-07", c:"S-7005-082", n:"B.Tech (Kanater)", a:"Delta", g:"Qalubia", d:"El Kanater", comment:""},
-    {date:"2026-10-07", c:"S-9158-040", n:"Raneen (Kanater)", a:"Delta", g:"Qalubia", d:"El Kanater", comment:""},
-    {date:"2026-10-08", c:"S-7005-044", n:"B.Tech (Shebin El Koum)", a:"Delta", g:"Menufia", d:"Shbeen Elkooom", comment:""},
-    {date:"2026-10-08", c:"S-7595-002", n:"BS-IR-Sheben New-Gold", a:"Delta", g:"Menufia", d:"Shbeen Elkooom", comment:""},
-    {date:"2026-10-08", c:"S-7505-001", n:"El Khawaga (El Monfiya)", a:"Delta", g:"Menufia", d:"Shbeen Elkooom", comment:""},
-    {date:"2026-10-08", c:"S-7568-001", n:"Abod El Ashmawy", a:"Delta", g:"Menufia", d:"Shbeen Elkooom", comment:""}
-];
+// الجدول يبدأ فارغاً تماماً
+let scheduleData = [];
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -573,12 +525,13 @@ function toggleShopForDate(shop) {
     if (idx !== -1) {
         scheduleData.splice(idx, 1);
     } else {
-        let area = shop.a, gov = shop.g;
-        if (document.getElementById('smartRegionFix').checked && gov.toLowerCase() === 'qalyubia') {
-            area = 'Delta'; gov = 'Qalubia';
-        }
         scheduleData.push({
-            date: selectedDate, c: shop.c, n: shop.n, a: area, g: gov, d: shop.d,
+            date: selectedDate,
+            c: shop.c,
+            n: shop.n,
+            a: shop.a,
+            g: shop.g,
+            d: shop.d,
             comment: document.getElementById('defaultComment').value.trim()
         });
     }
@@ -633,25 +586,29 @@ function renderTable() {
         </thead><tbody>`;
 
     const groups = getGroupedInfo();
-    groups.forEach((grp, gIdx) => {
-        // التبادل بين اللون البيج/البرتقالي الفاتح الأصلي (#FBE5D6) والأبيض (#FFFFFF)
-        const cls = (gIdx % 2 === 0) ? 'ex-peach' : 'ex-white';
-        const dayName = getDayName(grp.date);
-        grp.items.forEach((item, itemIdx) => {
-            const i = item.globalIndex;
-            html += `<tr class="${cls}">
-                <td>${formatExcelDateDisplay(item.date)}</td>
-                ${itemIdx === 0 ? `<td rowspan="${grp.items.length}" class="${cls}">${dayName}</td>` : ''}
-                <td><input class="editable-cell" value="${item.c}" onchange="updateCell(${i},'c',this.value)"></td>
-                <td><input class="editable-cell" value="${item.n}" onchange="updateCell(${i},'n',this.value)"></td>
-                <td><input class="editable-cell" value="${item.a}" onchange="updateCell(${i},'a',this.value)"></td>
-                <td><input class="editable-cell" value="${item.g}" onchange="updateCell(${i},'g',this.value)"></td>
-                <td><input class="editable-cell" value="${item.d}" onchange="updateCell(${i},'d',this.value)"></td>
-                <td><input class="editable-cell" value="${item.comment||''}" onchange="updateCell(${i},'comment',this.value)"></td>
-                <td style="border:none; background:#f3f4f6;"><button class="del-btn" onclick="removeRow(${i})">✖</button></td>
-            </tr>`;
+    if (groups.length === 0) {
+        html += `<tr><td colspan="8" style="padding: 24px; color: #6b7280; background: #ffffff;">الجدول فارغ حالياً.. اختر التاريخ واضغط على المحلات من القائمة لإضافتها.</td><td style="border:none; background:#f3f4f6;"></td></tr>`;
+    } else {
+        groups.forEach((grp, gIdx) => {
+            // التبادل بين اللون البيج/البرتقالي الفاتح الأصلي (#FBE5D6) والأبيض (#FFFFFF)
+            const cls = (gIdx % 2 === 0) ? 'ex-peach' : 'ex-white';
+            const dayName = getDayName(grp.date);
+            grp.items.forEach((item, itemIdx) => {
+                const i = item.globalIndex;
+                html += `<tr class="${cls}">
+                    <td>${formatExcelDateDisplay(item.date)}</td>
+                    ${itemIdx === 0 ? `<td rowspan="${grp.items.length}" class="${cls}">${dayName}</td>` : ''}
+                    <td><input class="editable-cell" value="${item.c}" onchange="updateCell(${i},'c',this.value)"></td>
+                    <td><input class="editable-cell" value="${item.n}" onchange="updateCell(${i},'n',this.value)"></td>
+                    <td><input class="editable-cell" value="${item.a}" onchange="updateCell(${i},'a',this.value)"></td>
+                    <td><input class="editable-cell" value="${item.g}" onchange="updateCell(${i},'g',this.value)"></td>
+                    <td><input class="editable-cell" value="${item.d}" onchange="updateCell(${i},'d',this.value)"></td>
+                    <td><input class="editable-cell" value="${item.comment||''}" onchange="updateCell(${i},'comment',this.value)"></td>
+                    <td style="border:none; background:#f3f4f6;"><button class="del-btn" onclick="removeRow(${i})">✖</button></td>
+                </tr>`;
+            });
         });
-    });
+    }
     tbl.innerHTML = html + `</tbody>`;
 }
 
@@ -710,7 +667,7 @@ async function exportToExcel(includeShopsSheet) {
             ? { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFBE5D6' } }
             : { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
 
-        const startRow = rowIdx;
+        const startRow = currentRow = rowIdx;
         const p = grp.date.split('-');
         const jsDate = new Date(Date.UTC(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])));
 
