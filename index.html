@@ -56,6 +56,7 @@
             border: none;
             font-weight: 700;
             font-size: 0.84rem;
+            max-width: 100%;
         }
 
         .upload-banner {
@@ -89,6 +90,8 @@
             padding: 18px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             border: 1px solid var(--border);
+            max-width: 100%;
+            overflow: hidden;
         }
         .card-title {
             font-size: 1.1rem;
@@ -98,6 +101,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
             border-bottom: 2px solid #eff6ff;
             padding-bottom: 8px;
         }
@@ -141,13 +146,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
             cursor: pointer;
             transition: 0.15s;
         }
         .shop-item:hover { border-color: var(--primary-light); }
         .shop-item.selected-today { border-color: var(--success); background: #ecfdf5; }
-        .shop-name { font-weight: 700; font-size: 0.9rem; direction: ltr; text-align: right; }
-        .shop-meta { font-size: 0.75rem; color: var(--muted); display: flex; gap: 8px; margin-top: 2px; }
+        .shop-name { font-weight: 700; font-size: 0.9rem; direction: ltr; text-align: right; word-break: break-word; }
+        .shop-meta { font-size: 0.75rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
         .shop-code-tag { background: #f3f4f6; padding: 1px 6px; border-radius: 4px; font-family: monospace; font-weight: 700; }
 
         .btn {
@@ -159,6 +165,7 @@
             border: none;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
         }
         .btn-excel { background: #107c41; color: white; }
@@ -176,12 +183,15 @@
             font-weight: 700;
             font-size: 0.78rem;
             cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .btn-add.added { background: var(--success); }
 
         /* معاينة مطابقة 100% لألوان الشيت الأصلي */
         .excel-wrapper {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             border: 2px solid #9ca3af;
             border-radius: 6px;
             background: white;
@@ -189,6 +199,7 @@
         }
         table.excel-table {
             width: 100%;
+            min-width: 720px;
             border-collapse: collapse;
             font-family: 'Calibri', sans-serif;
             font-size: 13px;
@@ -219,6 +230,24 @@
         }
         .editable-cell:focus { border-color: #2563eb; background: #fff; outline: none; }
         .del-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; }
+
+        /* التوافق الكامل مع جميع أحجام الشاشات والموبايلات */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .app-header { padding: 14px; text-align: center; justify-content: center; }
+            .app-header h1 { font-size: 1.15rem; }
+            .trainer-inputs { width: 100%; justify-content: space-between; }
+            .trainer-inputs .field { flex: 1 1 45%; }
+            .trainer-inputs input { width: 100% !important; }
+            .upload-banner { padding: 12px; text-align: center; justify-content: center; }
+            .upload-banner div { width: 100%; }
+            .upload-banner .btn { width: 100%; }
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .card { padding: 12px; }
+            .btn { width: 100%; font-size: 0.82rem; padding: 10px 12px; }
+            .action-bars { flex-direction: column; width: 100%; }
+            .action-bars > div { width: 100%; flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -226,7 +255,7 @@
 <div class="container">
     <div class="app-header">
         <div>
-            <h1>📅جدول الزيارات الأسبوعي (Weekly Schedule Plan)</h1>
+            <h1>📅 مشروع تخطيط جدول الزيارات الأسبوعي (Weekly Schedule Plan)</h1>
             <p>اختر التاريخ والمحلات يومياً وقم بتحميل شيت الإكسيل بنفس الألوان والتنسيق الأصلي 100%</p>
         </div>
         <div class="trainer-inputs">
@@ -252,9 +281,9 @@
     <!-- شريط رفع ملف المحلات -->
     <div class="upload-banner" id="uploadBanner">
         <div>
-            <strong id="bannerTitle">📂 الخطوة الأولى: ارفع ملف المحلات (SHOPS.xlsx) من جهازك</strong>
+            <strong id="bannerTitle">⏳ جارِ قراءة ملف المحلات (SHOPS.xlsx) تلقائياً...</strong>
             <p style="font-size: 0.82rem; color: #4b5563; margin-top: 2px;" id="bannerSub">
-                بمجرد اختيار ملف SHOPS.xlsx سيتم حفظ الـ 2,581 محل داخل متصفحك تلقائياً ولن تحتاج لرفعه مرة أخرى!
+                يتم تحميل قائمة المحلات تلقائياً، أو يمكنك رفع ملف محدث يدوياً في أي وقت.
             </p>
         </div>
         <div>
@@ -285,7 +314,7 @@
             </div>
 
             <div style="background:#eff6ff; padding:8px 10px; border-radius:8px; margin:10px 0; font-size:0.8rem; color:#1e40af; font-weight:600; display:flex; align-items:center; gap:8px;">
-                <input type="checkbox" id="smartRegionFix" checked style="width:15px; height:15px;">
+                <input type="checkbox" id="smartRegionFix" checked style="width:15px; height:15px; flex-shrink:0;">
                 <label for="smartRegionFix" style="cursor:pointer;">ضبط تلقائي للقليوبية لتظهر (Area: Delta / Governorate: Qalubia) مثل شيتك</label>
             </div>
 
@@ -319,7 +348,7 @@
                 <span class="badge" id="totalPlannedBadge">0 زيارة</span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div class="action-bars" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <button class="btn btn-excel" onclick="exportToExcel(false)">
                         📥 تحميل شيت جدول الزيارات (نفس الشيت الأصلي)
@@ -389,26 +418,51 @@ let scheduleData = [
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+function parseShopsWorkbook(arrayBuffer) {
+    const data = new Uint8Array(arrayBuffer);
+    const wb = XLSX.read(data, {type: 'array'});
+    const firstSheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(firstSheet, {defval: ''});
+    
+    return rows.map(r => ({
+        c: String(r['Shop Code'] || '').trim(),
+        n: String(r['Shop Name'] || '').trim(),
+        a: String(r['Area'] || '').trim(),
+        g: String(r['Governorate'] || '').trim(),
+        d: String(r['District'] || '').trim(),
+        ch: String(r['channel_name'] || '').trim(),
+        ad: String(r['Address'] || '').trim()
+    })).filter(s => s.c || s.n);
+}
+
+// قراءة ملف المحلات تلقائياً من جيت هب بجوار index.html
+async function autoLoadShopsFromGitHub() {
+    const fileCandidates = ['SHOPS.xlsx', 'shops.xlsx', 'Shops.xlsx'];
+    for (const fileName of fileCandidates) {
+        try {
+            const response = await fetch('./' + fileName);
+            if (response.ok) {
+                const buffer = await response.arrayBuffer();
+                const parsed = parseShopsWorkbook(buffer);
+                if (parsed.length > 0) {
+                    ALL_SHOPS = parsed;
+                    try { localStorage.setItem('SAVED_SHOPS_DB', JSON.stringify(ALL_SHOPS)); } catch(err) {}
+                    updateBannerStatus(true);
+                    initFilters();
+                    return true;
+                }
+            }
+        } catch (e) {}
+    }
+    return false;
+}
+
 function handleShopsUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, {type: 'array'});
-        const firstSheet = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(firstSheet, {defval: ''});
-        
-        const parsed = rows.map(r => ({
-            c: String(r['Shop Code'] || '').trim(),
-            n: String(r['Shop Name'] || '').trim(),
-            a: String(r['Area'] || '').trim(),
-            g: String(r['Governorate'] || '').trim(),
-            d: String(r['District'] || '').trim(),
-            ch: String(r['channel_name'] || '').trim(),
-            ad: String(r['Address'] || '').trim()
-        })).filter(s => s.c || s.n);
-
+        const parsed = parseShopsWorkbook(e.target.result);
         if (parsed.length > 0) {
             ALL_SHOPS = parsed;
             try { localStorage.setItem('SAVED_SHOPS_DB', JSON.stringify(ALL_SHOPS)); } catch(err) {}
@@ -423,8 +477,10 @@ function updateBannerStatus(isLoaded) {
     const banner = document.getElementById('uploadBanner');
     if (isLoaded) {
         banner.classList.add('loaded');
-        document.getElementById('bannerTitle').textContent = `✅ تم تحميل وحفظ قائمة المحلات الكاملة بنجاح (${ALL_SHOPS.length} محل متاح الآن)`;
-        document.getElementById('bannerSub').textContent = 'البيانات محفوظة في متصفحك تلقائياً. يمكنك تحديثها في أي وقت برفع ملف جديد.';
+        document.getElementById('bannerTitle').textContent = `✅ تم تحميل قائمة المحلات الكاملة بنجاح (${ALL_SHOPS.length} محل متاح الآن)`;
+        document.getElementById('bannerSub').textContent = 'جميع المحلات جاهزة للاستخدام مباشرة. يمكنك أيضاً رفع ملف محدث يدوياً في أي وقت.';
+    } else {
+        document.getElementById('bannerTitle').textContent = '📂 الخطوة الأولى: ارفع ملف المحلات (SHOPS.xlsx) أو ضعه بجانب الكود على جيت هب';
     }
 }
 
@@ -703,13 +759,25 @@ async function exportToExcel(includeShopsSheet) {
     saveAs(new Blob([buf]), (document.getElementById('fileName').value.trim() || 'Schedule') + '.xlsx');
 }
 
-window.onload = () => {
-    const saved = localStorage.getItem('SAVED_SHOPS_DB');
-    if (saved) {
-        try { ALL_SHOPS = JSON.parse(saved); updateBannerStatus(true); } catch(e) {}
-    }
-    initFilters();
+window.onload = async () => {
     renderTable();
+    // 1. محاولة قراءة ملف المحلات من جيت هب تلقائياً
+    const loadedFromGitHub = await autoLoadShopsFromGitHub();
+    if (!loadedFromGitHub) {
+        // 2. إذا لم يكن متصلاً بالسيرفر، يقرأ النسخة المحفوظة محلياً إن وجدت
+        const saved = localStorage.getItem('SAVED_SHOPS_DB');
+        if (saved) {
+            try {
+                ALL_SHOPS = JSON.parse(saved);
+                updateBannerStatus(true);
+            } catch(e) {
+                updateBannerStatus(false);
+            }
+        } else {
+            updateBannerStatus(false);
+        }
+        initFilters();
+    }
 };
 </script>
 </body>
