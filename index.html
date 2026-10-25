@@ -129,6 +129,53 @@
             background: #f9fafb;
         }
 
+        /* أزرار التنقل السريع بالتاريخ */
+        .date-nav-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+        .date-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .day-label-badge {
+            background: var(--primary);
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .date-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .btn-day-nav {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.15s;
+        }
+        .btn-day-nav:hover { background: var(--primary); }
+        .btn-day-prev {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 8px 10px;
+        }
+        .btn-day-prev:hover { background: #d1d5db; }
+
         .shops-container {
             max-height: 420px;
             overflow-y: auto;
@@ -243,6 +290,9 @@
             .upload-banner div { width: 100%; }
             .upload-banner .btn { width: 100%; }
             .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .date-controls { flex-wrap: wrap; }
+            .date-controls input[type="date"] { width: 100%; order: -1; }
+            .date-controls .btn-day-nav { flex: 1; }
             .card { padding: 12px; }
             .btn { width: 100%; font-size: 0.82rem; padding: 10px 12px; }
             .action-bars { flex-direction: column; width: 100%; }
@@ -302,18 +352,25 @@
                 <span class="badge" id="shopsCountBadge">0 محل</span>
             </div>
 
-            <div class="form-row">
-                <div class="form-group" style="margin:0;">
-                    <label>📅 تاريخ الزيارة (Date):</label>
-                    <input type="date" id="visitDate" value="2026-10-25" onchange="filterShops()">
+            <!-- قسم التاريخ المضبوط تلقائياً على يوم السبت + زر اليوم التالي -->
+            <div class="date-nav-box">
+                <div class="date-nav-header">
+                    <label style="font-size:0.84rem; font-weight:800; color:#1e3a8a;">📅 تاريخ الزيارة (يبدأ تلقائياً بالسبت):</label>
+                    <span class="day-label-badge" id="currentDayLabel">السبت (Sat)</span>
                 </div>
-                <div class="form-group" style="margin:0;">
-                    <label>💬 تعليق افتراضي (Comment):</label>
-                    <input type="text" id="defaultComment" placeholder="اختياري...">
+                <div class="date-controls">
+                    <button type="button" class="btn-day-nav btn-day-prev" onclick="stepDate(-1)" title="اليوم السابق">➡️ السابق</button>
+                    <input type="date" id="visitDate" onchange="onDateChange()">
+                    <button type="button" class="btn-day-nav" onclick="stepDate(1)">اليوم التالي ⬅️</button>
                 </div>
             </div>
 
-            <div class="form-group" style="margin-top: 10px;">
+            <div class="form-group">
+                <label>💬 تعليق افتراضي (Comment):</label>
+                <input type="text" id="defaultComment" placeholder="اختياري...">
+            </div>
+
+            <div class="form-group">
                 <label>🔍 بحث سريع (باسم المحل أو الكود أو المركز):</label>
                 <input type="text" id="searchInput" placeholder="ابحث هنا مثل: Raneen أو B.Tech أو Banha..." oninput="filterShops()">
             </div>
@@ -364,11 +421,61 @@
 
 <script>
 let ALL_SHOPS = [];
-
-// الجدول يبدأ فارغاً تماماً
 let scheduleData = [];
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_NAMES_AR = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+// دالة ضبط التاريخ تلقائياً على يوم السبت عند فتح الموقع
+function setInitialSaturday() {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 6 = Saturday
+    // إذا كان اليوم هو السبت يبقى كما هو، وإلا يضبط على السبت القادم لبداية الأسبوع الجديد
+    const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+    const targetSat = new Date(today);
+    targetSat.setDate(today.getDate() + daysUntilSaturday);
+
+    const yyyy = targetSat.getFullYear();
+    const mm = String(targetSat.getMonth() + 1).padStart(2, '0');
+    const dd = String(targetSat.getDate()).padStart(2, '0');
+    document.getElementById('visitDate').value = `${yyyy}-${mm}-${dd}`;
+    updateDayLabel();
+}
+
+// دالة الانتقال لليوم التالي أو السابق بضغطة زر
+function stepDate(daysToAdd) {
+    const dateInput = document.getElementById('visitDate');
+    if (!dateInput.value) {
+        setInitialSaturday();
+        return;
+    }
+    const p = dateInput.value.split('-');
+    const d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+    d.setDate(d.getDate() + daysToAdd);
+
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+    onDateChange();
+}
+
+function updateDayLabel() {
+    const val = document.getElementById('visitDate').value;
+    const badge = document.getElementById('currentDayLabel');
+    if (!val) {
+        badge.textContent = '';
+        return;
+    }
+    const p = val.split('-');
+    const idx = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])).getDay();
+    badge.textContent = `${DAY_NAMES_AR[idx]} (${DAY_NAMES[idx]})`;
+}
+
+function onDateChange() {
+    updateDayLabel();
+    filterShops();
+}
 
 function parseShopsWorkbook(arrayBuffer) {
     const data = new Uint8Array(arrayBuffer);
@@ -555,7 +662,12 @@ function getGroupedInfo() {
 
 function updateCell(idx, field, val) { scheduleData[idx][field] = val; }
 function removeRow(idx) { scheduleData.splice(idx, 1); renderTable(); filterShops(); }
-function clearSchedule() { scheduleData = []; renderTable(); filterShops(); }
+function clearSchedule() {
+    scheduleData = [];
+    setInitialSaturday();
+    renderTable();
+    filterShops();
+}
 
 function renderTable() {
     const tbl = document.getElementById('schedulePreviewTable');
@@ -587,7 +699,7 @@ function renderTable() {
 
     const groups = getGroupedInfo();
     if (groups.length === 0) {
-        html += `<tr><td colspan="8" style="padding: 24px; color: #6b7280; background: #ffffff;">الجدول فارغ حالياً.. اختر التاريخ واضغط على المحلات من القائمة لإضافتها.</td><td style="border:none; background:#f3f4f6;"></td></tr>`;
+        html += `<tr><td colspan="8" style="padding: 24px; color: #6b7280; background: #ffffff;">الجدول فارغ حالياً.. اختر محلات يوم السبت ثم اضغط (اليوم التالي ⬅️) لإكمال الأسبوع.</td><td style="border:none; background:#f3f4f6;"></td></tr>`;
     } else {
         groups.forEach((grp, gIdx) => {
             // التبادل بين اللون البيج/البرتقالي الفاتح الأصلي (#FBE5D6) والأبيض (#FFFFFF)
@@ -667,7 +779,7 @@ async function exportToExcel(includeShopsSheet) {
             ? { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFBE5D6' } }
             : { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
 
-        const startRow = currentRow = rowIdx;
+        const startRow = rowIdx;
         const p = grp.date.split('-');
         const jsDate = new Date(Date.UTC(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])));
 
@@ -717,6 +829,7 @@ async function exportToExcel(includeShopsSheet) {
 }
 
 window.onload = async () => {
+    setInitialSaturday();
     renderTable();
     // 1. محاولة قراءة ملف المحلات من جيت هب تلقائياً
     const loadedFromGitHub = await autoLoadShopsFromGitHub();
